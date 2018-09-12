@@ -3,17 +3,27 @@
   
     
     <entry>
-      <title>Hello World</title>
-      <link href="/2018/09/03/hello-world/"/>
-      <url>/2018/09/03/hello-world/</url>
-      <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>]]></content>
+      <title>B+ 树</title>
+      <link href="/2018/08/30/hello-world/"/>
+      <url>/2018/08/30/hello-world/</url>
+      <content type="html"><![CDATA[<h2 id="B-树🌲"><a href="#B-树🌲" class="headerlink" title="B+ 树🌲"></a>B+ 树🌲</h2><h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><p>B+Tree是B树的变种，有着比B树更高的查询性能，来看下m阶B+Tree特征：</p><p>1、有m个子树的节点包含有m个元素（B-Tree中是m-1）</p><p>2、根节点和分支节点中不保存数据，只用于索引，所有数据都保存在叶子节点中。</p><p>3、所有分支节点和根节点都同时存在于子节点中，在子节点元素中是最大或者最小的元素。</p><p>4、叶子节点会包含所有的关键字，以及指向数据记录的指针，并且叶子节点本身是根据关键字的大小从小到大顺序链接。</p><p><img src="https://images2017.cnblogs.com/blog/831179/201707/831179-20170727161516618-309588696.png" alt=""><br>1、红点表示是指向卫星数据的指针，指针指向的是存放实际数据的磁盘页，卫星数据就是数据库中一条数据记录。</p><p>2、叶子节点中还有一个指向下一个叶子节点的next指针，所以叶子节点形成了一个有序的链表，方便遍历B+树。</p><h3 id="B-树的优势"><a href="#B-树的优势" class="headerlink" title="B+树的优势"></a>B+树的优势</h3><p>1、更加高效的单元素查找<br>B+树的查找元素3的过程：</p><p>第一次磁盘IO<br><img src="https://images2017.cnblogs.com/blog/831179/201707/831179-20170727164727368-1815008301.png" alt=""><br>第二次磁盘IO<br><img src="https://images2017.cnblogs.com/blog/831179/201707/831179-20170727164821274-2109260481.png" alt=""><br>第三次磁盘IO<br><img src="https://images2017.cnblogs.com/blog/831179/201707/831179-20170727164850993-1053507218.png" alt=""><br>这个过程看下来，貌似与B树的查询过程没有什么区别。但实际上有两点不一样：</p><p>a、首先B+树的中间节点不存储卫星数据，所以同样大小的磁盘页可以容纳更多的节点元素，如此一来，相同数量的数据下，B+树就相对来说要更加矮胖些，磁盘IO的次数更少。</p><p>b、由于只有叶子节点才保存卫星数据，B+树每次查询都要到叶子节点；而B树每次查询则不一样，最好的情况是根节点，最坏的情况是叶子节点，没有B+树稳定。</p><h3 id="叶子节点形成有顺链表，范围查找性能更优"><a href="#叶子节点形成有顺链表，范围查找性能更优" class="headerlink" title="叶子节点形成有顺链表，范围查找性能更优"></a>叶子节点形成有顺链表，范围查找性能更优</h3><h4 id="B树范围查找3-8的过程"><a href="#B树范围查找3-8的过程" class="headerlink" title="B树范围查找3-8的过程"></a>B树范围查找3-8的过程</h4><p>先查找3<br><img src="https://images2017.cnblogs.com/blog/831179/201707/831179-20170726204440265-1470875410.png" alt=""><br>再查找4、5、6、7、8，中间过程省略，直接到8的查找<br><img src="https://images2017.cnblogs.com/blog/831179/201707/831179-20170726204557218-278418125.png" alt=""><br>这里查找的范围跨度越大，则磁盘IO的次数越多，性能越差。</p><h4 id="B-树范围查找3-11的过程"><a href="#B-树范围查找3-11的过程" class="headerlink" title="B+树范围查找3-11的过程"></a>B+树范围查找3-11的过程</h4><p><img src="https://images2017.cnblogs.com/blog/831179/201707/831179-20170727170747243-354328993.png" alt=""><br>先从上到下找到下限元素3，然后通过链表指针，依次遍历得到元素5/6/8/9/11；如此一来，就不用像B树那样一个个元素进行查找。</p><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>1.单节点可以存储更多的元素，使得查询磁盘IO次数更少。</p><p>2.所有查询都要查找到叶子节点，查询性能稳定。</p><p>3.所有叶子节点形成有序链表，便于范围查询。</p><p>PS:在数据库的聚集索引（Clustered Index）中，叶子节点直接包含卫星数据。在非聚集索引（NonClustered Index）中，叶子节点带有指向卫星数据的指针。</p>]]></content>
+      
+      <categories>
+          
+          <category> 技术 </category>
+          
+          <category> 数据结构 </category>
+          
+      </categories>
       
       
         <tags>
             
-            <tag> spark </tag>
+            <tag> tree </tag>
             
-            <tag> RDD </tag>
+            <tag> 数据结构 </tag>
+            
+            <tag> DB </tag>
             
         </tags>
       
@@ -38,9 +48,9 @@
             
             <tag> spark </tag>
             
-            <tag> RDD </tag>
-            
             <tag> 大数据 </tag>
+            
+            <tag> RDD </tag>
             
             <tag> 运行模式 </tag>
             
